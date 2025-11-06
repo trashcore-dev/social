@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Social Media Downloader</title>
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(120deg, #ff4b2b, #ff416c);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  color: #333;
+}
+.container {
+  background: #fff;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+  text-align: center;
+  width: 95%;
+  max-width: 550px;
+}
+h1 { color: #e60023; }
+select, input {
+  width: 90%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+button {
+  margin-top: 15px;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  background: #e60023;
+  cursor: pointer;
+}
+button:hover { background: #b1001b; }
+#result { margin-top: 20px; }
+video, img {
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+a {
+  display: inline-block;
+  margin-top: 10px;
+  background: #e60023;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎬 Social Media Downloader</h1>
+  <p>Download videos or images from Pinterest, Facebook, and Instagram.</p>
+
+  <select id="platform">
+    <option value="pinterest">Pinterest</option>
+    <option value="social">Facebook / Instagram</option>
+  </select>
+  <input id="url" type="text" placeholder="Paste your link here...">
+  <button onclick="download()">Download</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+async function download() {
+  const platform = document.getElementById("platform").value;
+  const url = document.getElementById("url").value.trim();
+  const result = document.getElementById("result");
+
+  if (!url) return result.innerHTML = "⚠️ Please paste a valid link.";
+  result.innerHTML = "⏳ Fetching media...";
+
+  const endpoint = platform === "pinterest" ? "/api/pindl" : "/api/socialdl";
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    if (data.error) return result.innerHTML = `❌ ${data.error}`;
+
+    let media = "";
+    if (data.type === "video") {
+      media = `<video controls src="${data.media}"></video><a href="${data.media}" download>⬇️ Download Video</a>`;
+    } else {
+      media = `<img src="${data.media}" alt="image"><a href="${data.media}" download>⬇️ Download Image</a>`;
+    }
+
+    result.innerHTML = `
+      <h3>${data.platform ? data.platform.toUpperCase() : platform.toUpperCase()} Media</h3>
+      ${media}
+    `;
+  } catch (err) {
+    result.innerHTML = `💥 Error: ${err.message}`;
+  }
+}
+</script>
+</body>
+</html>
